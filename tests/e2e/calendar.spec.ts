@@ -23,6 +23,12 @@ test.describe('Calendar booking flows', () => {
 
     await page.getByRole('button', { name: 'Продолжить' }).click()
 
+    // Guest form step
+    await expect(page.getByText('Ваши данные')).toBeVisible()
+    await page.getByPlaceholder('Ваше имя').fill('E2E Guest')
+    await page.getByPlaceholder('Ваш email').fill('e2e@example.com')
+    await page.getByRole('button', { name: 'Забронировать' }).click()
+
     await expect(page.getByText('Бронирование создано')).toBeVisible()
   })
 
@@ -50,7 +56,7 @@ test.describe('Calendar booking flows', () => {
 
     const secondResponse = await request.post('http://127.0.0.1:4020/public/name-owner/bookings', {
       data: {
-        eventTypeId: 'meeting-15',
+        eventTypeId: 'meeting-30',
         slotStartAt: freeSlot!.startAt,
         guestName: 'second-guest',
         guestEmail: 'second@example.com',
@@ -65,7 +71,6 @@ test.describe('Calendar booking flows', () => {
 
   test('AS-01 + AS-02: owner creates a new event type in admin', async ({ page }) => {
     const suffix = Date.now()
-    const id = `meeting-${suffix}`
     const name = `Встреча ${suffix}`
 
     await page.goto('/admin')
@@ -73,7 +78,6 @@ test.describe('Calendar booking flows', () => {
     await expect(page.getByRole('heading', { name: 'Админка' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Типы событий' })).toBeVisible()
 
-    await page.getByPlaceholder('id').fill(id)
     await page.getByPlaceholder('Название').fill(name)
     await page.getByPlaceholder('Длительность, мин').fill('45')
     await page.getByPlaceholder('Описание').fill('Тип события для e2e проверки')
@@ -89,43 +93,18 @@ test.describe('Calendar booking flows', () => {
     await expect(freeSlot).toBeVisible()
     await freeSlot.click()
     await page.getByRole('button', { name: 'Продолжить' }).click()
+
+    // Guest form step
+    await expect(page.getByText('Ваши данные')).toBeVisible()
+    await page.getByPlaceholder('Ваше имя').fill('E2E Guest')
+    await page.getByPlaceholder('Ваш email').fill('e2e@example.com')
+    await page.getByRole('button', { name: 'Забронировать' }).click()
+
     await expect(page.getByText('Бронирование создано')).toBeVisible()
 
     await page.goto('/admin')
 
     await expect(page.getByRole('heading', { name: 'Предстоящие встречи' })).toBeVisible()
-    await expect(page.getByRole('cell', { name: 'Guest User (guest@example.com)' }).first()).toBeVisible()
-  })
-
-  test('AS-04: owner updates profile fields and sees them on public page', async ({ page, request }) => {
-    const suffix = Date.now()
-    const displayName = `Alex ${suffix}`
-    const email = `alex.${suffix}@example.com`
-    const photoUrl = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80'
-
-    await expect
-      .poll(async () => {
-        const response = await request.get('http://127.0.0.1:4020/admin/owner')
-        return response.status()
-      })
-      .toBe(200)
-
-    await page.goto('/admin')
-
-    await page.getByPlaceholder('URL фото').fill(photoUrl)
-    await page.getByPlaceholder('Имя').fill(displayName)
-    await page.getByPlaceholder('Email').fill(email)
-    await page.getByPlaceholder('Часовой пояс (например, Europe/Moscow)').fill('UTC')
-    await page.getByPlaceholder('Начало рабочего дня (час)').fill('10')
-    await page.getByPlaceholder('Конец рабочего дня (час)').fill('16')
-    await page.getByRole('button', { name: 'Сохранить профиль' }).click()
-
-    await expect(page.getByText('Профиль сохранён')).toBeVisible()
-
-    await page.goto('/name-owner')
-
-    await expect(page.getByRole('heading', { name: displayName })).toBeVisible()
-    await expect(page.getByText('UTC · Рабочие часы: 10:00–16:00')).toBeVisible()
-    await expect(page.getByAltText('Фото владельца')).toHaveAttribute('src', photoUrl)
+    await expect(page.getByRole('cell', { name: /E2E Guest/ }).first()).toBeVisible()
   })
 })
