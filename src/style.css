@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 219 48% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 219 48% 17%;
+  --primary: 24 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 53% 95%;
+  --secondary-foreground: 215 30% 40%;
+  --muted: 210 50% 95%;
+  --muted-foreground: 215 23% 58%;
+  --accent: 210 52% 95%;
+  --accent-foreground: 215 30% 40%;
+  --border: 214 39% 85%;
+  --input: 214 39% 85%;
+  --ring: 214 39% 85%;
+  --radius: 14px;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Manrope', sans-serif;
+  color: hsl(var(--foreground));
+  background: linear-gradient(170deg, #d9e4f6 0%, #edf3fa 44%, #f8f0e8 100%);
+}
+
+#app {
+  min-height: 100vh;
+}

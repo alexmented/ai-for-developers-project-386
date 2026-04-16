@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Calendar Booking Mock API
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:4010
+paths:
+  /public/{ownerSlug}:
+    get:
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Owner profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicOwnerProfile'
+              example:
+                slug: name-owner
+                displayName: Tota
+                timezone: Europe/Moscow
+  /public/{ownerSlug}/event-types:
+    get:
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+              example:
+                - id: meeting-15
+                  name: Встреча 15 минут
+                  description: Короткий тип события для быстрого слота.
+                  durationMinutes: 15
+                - id: meeting-30
+                  name: Встреча 30 минут
+                  description: Базовый тип события для бронирования.
+                  durationMinutes: 30
+  /public/{ownerSlug}/event-types/{eventTypeId}/slots:
+    get:
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+              example:
+                - eventTypeId: meeting-15
+                  startAt: 2026-03-31T09:00:00.000Z
+                  endAt: 2026-03-31T09:15:00.000Z
+                  isAvailable: false
+                - eventTypeId: meeting-15
+                  startAt: 2026-03-31T09:15:00.000Z
+                  endAt: 2026-03-31T09:30:00.000Z
+                  isAvailable: false
+                - eventTypeId: meeting-15
+                  startAt: 2026-03-31T09:45:00.000Z
+                  endAt: 2026-03-31T10:00:00.000Z
+                  isAvailable: true
+                - eventTypeId: meeting-15
+                  startAt: 2026-03-31T10:00:00.000Z
+                  endAt: 2026-03-31T10:15:00.000Z
+                  isAvailable: true
+                - eventTypeId: meeting-15
+                  startAt: 2026-03-31T10:15:00.000Z
+                  endAt: 2026-03-31T10:30:00.000Z
+                  isAvailable: true
+  /public/{ownerSlug}/bookings:
+    post:
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '200':
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+              example:
+                id: bk-001
+                ownerSlug: name-owner
+                eventTypeId: meeting-15
+                startAt: 2026-03-31T09:45:00.000Z
+                endAt: 2026-03-31T10:00:00.000Z
+                guestName: Иван
+                guestEmail: ivan@example.com
+                guestComment: ''
+                status: confirmed
+                createdAt: 2026-03-20T10:00:00.000Z
+  /admin/event-types:
+    get:
+      responses:
+        '200':
+          description: Admin event types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+              example:
+                - id: meeting-15
+                  name: Встреча 15 минут
+                  description: Короткий тип события для быстрого слота.
+                  durationMinutes: 15
+                - id: meeting-30
+                  name: Встреча 30 минут
+                  description: Базовый тип события для бронирования.
+                  durationMinutes: 30
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventTypeRequest'
+      responses:
+        '200':
+          description: Created event type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+  /admin/bookings/upcoming:
+    get:
+      responses:
+        '200':
+          description: Upcoming bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+              example:
+                - id: bk-001
+                  ownerSlug: name-owner
+                  eventTypeId: meeting-15
+                  startAt: 2026-03-31T09:45:00.000Z
+                  endAt: 2026-03-31T10:00:00.000Z
+                  guestName: Иван
+                  guestEmail: ivan@example.com
+                  status: confirmed
+                  createdAt: 2026-03-20T10:00:00.000Z
+components:
+  schemas:
+    PublicOwnerProfile:
+      type: object
+      required: [slug, displayName, timezone]
+      properties:
+        slug:
+          type: string
+        displayName:
+          type: string
+        timezone:
+          type: string
+    EventType:
+      type: object
+      required: [id, name, description, durationMinutes]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+    Slot:
+      type: object
+      required: [eventTypeId, startAt, endAt, isAvailable]
+      properties:
+        eventTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        isAvailable:
+          type: boolean
+    CreateBookingRequest:
+      type: object
+      required: [eventTypeId, slotStartAt, guestName, guestEmail]
+      properties:
+        eventTypeId:
+          type: string
+        slotStartAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestComment:
+          type: string
+    CreateEventTypeRequest:
+      type: object
+      required: [id, name, description, durationMinutes]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+    Booking:
+      type: object
+      required:
+        [
+          id,
+          ownerSlug,
+          eventTypeId,
+          startAt,
+          endAt,
+          guestName,
+          guestEmail,
+          status,
+          createdAt
+        ]
+      properties:
+        id:
+          type: string
+        ownerSlug:
+          type: string
+        eventTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestComment:
+          type: string
+        status:
+          type: string
+          enum: [confirmed]
+        createdAt:
+          type: string
+          format: date-time

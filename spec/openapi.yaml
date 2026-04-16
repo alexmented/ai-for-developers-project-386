@@ -1,0 +1,497 @@
+openapi: 3.0.0
+info:
+  title: Calendar Booking API
+  version: 0.0.0
+tags: []
+paths:
+  /admin/bookings/upcoming:
+    get:
+      operationId: AdminApi_listUpcomingBookings
+      parameters:
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          explode: false
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+  /admin/event-types:
+    post:
+      operationId: AdminApi_createEventType
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventTypeRequest'
+    get:
+      operationId: AdminApi_listEventTypes
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+  /admin/owner:
+    get:
+      operationId: AdminApi_getOwner
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarOwner'
+    put:
+      operationId: AdminApi_updateOwner
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarOwner'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OwnerProfileUpdateRequest'
+  /public/{ownerSlug}:
+    get:
+      operationId: PublicApi_getOwnerProfile
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicOwnerProfile'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerNotFoundError'
+  /public/{ownerSlug}/bookings:
+    post:
+      operationId: PublicApi_createBooking
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/OwnerNotFoundError'
+                  - $ref: '#/components/schemas/NotFoundError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotConflictError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+  /public/{ownerSlug}/event-types:
+    get:
+      operationId: PublicApi_listPublicEventTypes
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerNotFoundError'
+  /public/{ownerSlug}/event-types/{eventTypeId}/slots:
+    get:
+      operationId: PublicApi_listAvailableSlots
+      parameters:
+        - name: ownerSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          explode: false
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/OwnerNotFoundError'
+                  - $ref: '#/components/schemas/NotFoundError'
+components:
+  schemas:
+    Booking:
+      type: object
+      required:
+        - id
+        - ownerSlug
+        - eventTypeId
+        - startAt
+        - endAt
+        - guestName
+        - guestEmail
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+        ownerSlug:
+          type: string
+        eventTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestComment:
+          type: string
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        createdAt:
+          type: string
+          format: date-time
+    BookingStatus:
+      type: string
+      enum:
+        - confirmed
+    CalendarOwner:
+      type: object
+      required:
+        - id
+        - slug
+        - displayName
+        - email
+        - timezone
+        - weeklySchedule
+      properties:
+        id:
+          type: string
+          enum:
+            - owner-default
+        slug:
+          type: string
+        photoUrl:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        timezone:
+          type: string
+        weeklySchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkDaySchedule'
+    CreateBookingRequest:
+      type: object
+      required:
+        - eventTypeId
+        - slotStartAt
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+        slotStartAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        guestComment:
+          type: string
+    CreateEventTypeRequest:
+      type: object
+      required:
+        - name
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+    DayOfWeek:
+      type: string
+      enum:
+        - monday
+        - tuesday
+        - wednesday
+        - thursday
+        - friday
+        - saturday
+        - sunday
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    EventType:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+    NotFoundError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - NOT_FOUND
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    OwnerNotFoundError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - OWNER_NOT_FOUND
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    OwnerProfileUpdateRequest:
+      type: object
+      required:
+        - displayName
+        - email
+        - timezone
+        - weeklySchedule
+      properties:
+        photoUrl:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        timezone:
+          type: string
+        weeklySchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkDaySchedule'
+    PublicOwnerProfile:
+      type: object
+      required:
+        - slug
+        - displayName
+        - timezone
+        - weeklySchedule
+      properties:
+        slug:
+          type: string
+        photoUrl:
+          type: string
+        displayName:
+          type: string
+        timezone:
+          type: string
+        weeklySchedule:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkDaySchedule'
+    Slot:
+      type: object
+      required:
+        - eventTypeId
+        - startAt
+        - endAt
+        - isAvailable
+      properties:
+        eventTypeId:
+          type: string
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        isAvailable:
+          type: boolean
+          enum:
+            - true
+    SlotConflictError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - SLOT_CONFLICT
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    WorkDaySchedule:
+      type: object
+      required:
+        - dayOfWeek
+        - isActive
+        - startHour
+        - endHour
+      properties:
+        dayOfWeek:
+          $ref: '#/components/schemas/DayOfWeek'
+        isActive:
+          type: boolean
+        startHour:
+          type: integer
+          format: int32
+        endHour:
+          type: integer
+          format: int32

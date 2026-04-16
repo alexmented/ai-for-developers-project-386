@@ -1,0 +1,50 @@
+{
+  "name": "ai-for-developers-project-386",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:backend": "sh -c 'BACKEND_ADDR=:4020 ${GO_BIN:-go} run ./backend/cmd/server'",
+    "dev:frontend:backend": "VITE_API_BASE_URL=http://127.0.0.1:4020 vite",
+    "dev:mock": "VITE_API_BASE_URL=http://127.0.0.1:4010 vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "mock": "prism mock mock/openapi.yaml -h 127.0.0.1 -p 4010",
+    "test:backend": "sh -c '${GO_BIN:-go} test ./...'",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "spec:openapi": "tsp compile spec/api.tsp --emit @typespec/openapi3 --option \"@typespec/openapi3.emitter-output-dir={project-root}/spec\" --option @typespec/openapi3.output-file=openapi.yaml",
+    "openapi:go": "sh -c '${GO_BIN:-go} run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest --config backend/oapi-codegen.yaml spec/openapi.yaml'",
+    "openapi:ts": "openapi --input spec/openapi.yaml --output src/generated/api --client fetch --useUnionTypes",
+    "codegen:go": "npm run spec:openapi && npm run openapi:go",
+    "codegen:frontend": "npm run spec:openapi && npm run openapi:ts"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^1.0.0",
+    "tailwind-merge": "^3.5.0",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@types/node": "^24.12.2",
+    "@typespec/compiler": "^1.11.0",
+    "@typespec/http": "^1.11.0",
+    "@typespec/openapi3": "^1.11.0",
+    "@typespec/rest": "^0.81.0",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/tsconfig": "^0.9.1",
+    "autoprefixer": "^10.5.0",
+    "openapi-typescript-codegen": "^0.30.0",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.4",
+    "vue-tsc": "^3.2.6"
+  }
+}
