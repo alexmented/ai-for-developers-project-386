@@ -174,7 +174,17 @@ func NewDefaultHandler() http.Handler {
 	now := func() time.Time { return time.Now().UTC() }
 	svc := service.NewCalendarService(now)
 	server := NewServer(svc)
-	return WithCORS(api.Handler(server))
+	apiHandler := WithCORS(api.Handler(server))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" || r.URL.Path == "/health" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ok"))
+			return
+		}
+
+		apiHandler.ServeHTTP(w, r)
+	})
 }
 
 func WithCORS(next http.Handler) http.Handler {

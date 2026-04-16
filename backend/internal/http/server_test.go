@@ -37,6 +37,19 @@ func TestGetOwnerProfile(t *testing.T) {
 	}
 }
 
+func TestDefaultHandlerHealthEndpoint(t *testing.T) {
+	handler := NewDefaultHandler()
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	recorder := httptest.NewRecorder()
+
+	handler.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", recorder.Code)
+	}
+}
+
 func TestCreateBookingConflictReturns409(t *testing.T) {
 	now := time.Date(2026, 3, 31, 6, 0, 0, 0, time.UTC)
 	svc := service.NewCalendarService(func() time.Time { return now })
